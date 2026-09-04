@@ -1,0 +1,64 @@
+\documentclass[twocolumn]{article}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath}
+\usepackage{graphicx}
+
+\title{Capacitor Charging and the Time Constant}
+\author{Gib Macarine}
+%\date{September 2026}
+
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+This document introduces the charging behaviour of a
+resistor-capacitor (RC) network and derives the capacitor
+voltage at one time constant.
+\end{abstract}
+
+\section{Introduction}
+% charging law and time constant go here
+
+This document introduces the charging behavior of a resistor-capacitor (RC) network. When a capacitor C is charged through a series resistor R from a constant supply $V_0$, the capacitor voltage rises according to
+
+\begin{equation}
+    V(t) = V_0(1-e^{-t/RC})\text{,}
+    \label{chaging_voltage}
+\end{equation}
+
+\noindent
+where the product RC has units of seconds and is called the time constant, $\tau=RC$
+
+\section{Voltage at the Time Constant}
+
+Substituting $t = \tau$ into \ref{chaging_voltage}:
+
+\begin{equation}
+    \begin{align}
+        V(\tau) &= V_0\left(1-e^{-\tau/RC}\right)\\
+                 &= V_0\left(1-e^{-RC/RC}\right) \qquad \text{since } \tau=RC\\
+                &= V_0\left(1-e^{-1}\right)\\
+                &\approx V_0\left(1-0.368\right)\\
+                &\approx 0.632V_0
+   \end{align}
+\end{equation}
+
+\noindent
+The exponent canceling to -1 in \ref{chaging_voltage_at_t_const} is why the 0.632 is universal -- R and C dropped out of the calculation before the final line, so this fraction holds for any RC network. Substituting $V_0=5.0V$:
+
+\begin{equation}
+    V(\tau) \approx 0.632 \times 5.0V \approx 3.16V\text{,}
+\end{equation}
+
+matching the dashed line in Figure 1.
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=\columnwidth]{../figures/rc_charging.pdf}
+    \caption{Changing curve for $R=10\,\text{k}\Omega$, $C=22\,\text{pF}$.}
+    \label{fig:re}
+\end{figure}
+
+
+\end{document}
