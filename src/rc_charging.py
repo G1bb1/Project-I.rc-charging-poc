@@ -1,3 +1,23 @@
+'''
+File:
+rc_charging.py
+
+Description:
+This program computes and plots the voltage charge of a capacitor in an RC circuit.
+A line separating voltage from LOW and HIGH states are drawn. Additionally,
+different resistors values were tested to see the time it takes to charge a capacitor.
+The goal is to research different resistor choices that best fit the target release value
+of the power on circuit.
+
+Note:
+- At the very end of this file, be aware that the save file path
+  is relative to the current working directory.
+
+___________________________________________________
+Author      Date                Comment
+Gib M.      Sept. 4th, 2026     rev 1
+'''
+
 import numpy as np
 import matplotlib.pyplot as plt
 
