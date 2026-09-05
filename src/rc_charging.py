@@ -17,7 +17,6 @@ ___________________________________________________
 Author      Date                Comment
 Gib M.      Sept. 4th, 2026     rev 1
 '''
-
 import numpy as np
 import matplotlib.pyplot as plt
 
