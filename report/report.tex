@@ -87,4 +87,79 @@ Substituting into \ref{eq:resistor_constraint}:
 \noindent
 An $83\,k\Omega$ resistor with a 100 nF capacitor gives a reset hold-off of approximately 10 ms. Keeping C at the plotting value of 22pF instead: the same 10 ms target would demand $R\approx377\,\text{M}\Omega$, an impractical value --- which is precisely why a real design picks C in the nanofarad range first, then solves for a resistor in a sane $k\Omega$ range.
 
+\section{Applications and Limitations}
+
+\subsection{Application: The EN Pin on an ESP32 module}
+
+A good application for an RC-only POR is the EN (enable) pin on the ESP32 board, a powerful and popular microcontroller SoC board with Wi-Fi/BlueTooth connectivity for hobbyist and commercial use. 
+
+Adding a power-on-reset circuit ensures that that board initializes correctly by holding the pin on low because many systems may function improperly when the voltage is not at the proper threshold. 
+
+This is better over other possible solutions like a supervisor since the boards has its own brownout detector that resets the chip already. Additionally, there are no precise timings required. The EN pin only requires to stay low until the power is acceptable enough.
+
+The pins on the chip uses the same input-high threshold as the other I/O pins on the board: $V_{IH}\geq0.75\,V_{DD}$. A $R=10\,k\Omega$ and $C=1\,\mu F$ are the recommended components used for this device. With these chosen R and C, it gives a $t_{release}$ of:
+
+\begin{equation}
+    \begin{align}
+    \ln\left(1-0.75\right)&=\ln(0.25)\approx-1.386\\
+    t_{release} &= -RC\ln\left(1-\frac{V_{IH}}{V_0}\right)\\&= \left(-10\,k\Omega\right) \left(1\,\mu F\right)\left(-1.386\right)\\ &\approx13.9\,ms$
+    \end{align}
+\end{equation}
+
+
+\noindent
+This is comfortably long enough to cover the module's regulator and RF start-up.
+
+\subsection{Limitations}
+
+The RC-only approach has at least two further limitations for this application:
+
+\subsubsection{Inability to force a reset from software or a watchdog without additional circuitry.}
+
+The EN-pin RC network is entirely passive: it reacts only to the natural rise of $V_{DD}$ after power is applied, and gives neither the firmware nor an external supervisor any way to reach in and pull the pin low again on demand. ESP32's own software restart reinitializes the CPU and peripherals internally without touching the EN pin at all, so it does not reproduce the same full hardware reset --- RF calibration included --- that physically toggling EN does.
+
+\subsubsection{Sensitivity to a slow $V_{DD}$ ramp.}
+
+Equation~\ref{eq:cap_charge_voltage} assumes $V_0$ is already at its final value the instant power is applied. In practice, boards built around this chip have reported unreliable cold boot-up traced to exactly this network --- an undersized capacitor or a slow-starting supply leaving EN lingering near $V_{IH}$ for an extended, poorly-defined time instead of releasing cleanly.
+
+
+\subsection{Component Tolerance}
+
+Real resistors and capacitors are not exact. Since $t_{release}=-RC\ln(1-V_{IH}/V_0)=kRC$ for a constant $k=-\ln(1-V_{IH}/V_0)$ that does not depend on $R$ or $C$, small deviations $\Delta R$ and $\Delta C$ propagate as
+ 
+\begin{equation}
+    \begin{align}
+        t+\Delta t &= k(R+\Delta R)(C+\Delta C)\\
+        &= kRC + kR\,\Delta C + kC\,\Delta R + k\,\Delta R\,\Delta C\\
+        &\approx kRC + kR\,\Delta C + kC\,\Delta R,
+    \end{align}
+\end{equation}
+ 
+\noindent
+dropping the second-order term. Dividing by $t=kRC$:
+ 
+\begin{equation}
+    \frac{\Delta t}{t}\approx\frac{\Delta R}{R}+\frac{\Delta C}{C}.
+    \label{eq:tolerance}
+\end{equation}
+ 
+\noindent
+The relative timing error is, to first order, just the sum of the two component tolerances.
+
+For the $10\,k\Omega$ resistor and $1\,\mu F$ capacitor chosen in Part A, a realistic thick-film SMD resistor tolerance is $\pm5\%$; a realistic tolerance for a small SMD $1\,\mu F$ ceramic capacitor is looser than the nanofarad-range parts used earlier in this report, typically $\pm20\%$. Applying \ref{eq:tolerance}:
+ 
+\begin{equation}
+    \frac{\Delta t}{t}\approx0.05+0.20=0.25
+\end{equation}
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=\columnwidth]{../figures/rc_tolerance.pdf}
+    \caption{Charging curves for the nominal, fastest, and slowest RC combinations permitted by $\pm5\%$ resistor and $\pm20\%$ capacitor tolerances on the ESP32 EN-pin network, with $V_{IH}$ marked.}
+    \label{fig:rc_tolerance}
+\end{figure}
+
+\noindent
+With $t_{release}=13.86\,ms$, this gives $\Delta t\approx3.47\,ms$, so the true release time could fall anywhere from about $\mathbf{10.40\,ms}$ to $\mathbf{17.33\,ms}$. Computing the two extremes exactly rather than with the linearized formula -- using \ref{eq:resistor_constraint} directly on $R(1\pm0.05)$ and $C(1\pm0.20)$ -- gives $10.54\,ms$ and $17.47\,ms$, confirming that the first-order approximation in \ref{eq:tolerance} remains a good match even at this larger, $25\%$ combined tolerance.
+
 \end{document}
